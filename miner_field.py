@@ -1,10 +1,8 @@
 import random
-from time import sleep
 from PyQt6.QtWidgets import QPushButton, QApplication, QMainWindow, QWidget, QGridLayout
 from PyQt6.QtGui import QPalette, QColor
 from PyQt6.QtCore import QSize, Qt
 from PyQt6 import QtCore
-
 
 class Color(QWidget):
 
@@ -27,7 +25,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.widget)
         
         #количество полей
-        self.height = self.width = 12
+        self.height = self.width = 16
 
         #заполнение поля кнопками
     def init(self):
@@ -51,7 +49,6 @@ class MainWindow(QMainWindow):
                 self.button.x = i
                 self.button.y = j
                 self.cells.append(self.button)
-
    
     #открытие поля по клику
     def open_cell(self):
@@ -61,15 +58,14 @@ class MainWindow(QMainWindow):
             sender.setDisabled(True)
             sender.is_pressed = True
             
-            #print(sender.x, sender.y)
-            #pole_game.pole[sender.x][sender.y].fl_open = True
-            #print(sender.isChecked())
-            #print(pole_game.pole[sender.x][sender.y].around_mines)
-            #pole_game.show()
             if pole_game.pole[sender.x][sender.y].mine == True:
                 sender.setText('XX')
                 for i in self.cells:
                     i.click()
+                    if i.mine_note == True:
+                        i.mine_note = False
+                        i.setCheckable(True)
+                        i.setStyleSheet("background-color: white")
             elif pole_game.pole[sender.x][sender.y].around_mines > 0:
                     sender.setText(str(pole_game.pole[sender.x][sender.y].around_mines))
             if pole_game.pole[sender.x][sender.y].around_mines == 0 and pole_game.pole[sender.x][sender.y].mine != True:
@@ -98,7 +94,7 @@ class MainWindow(QMainWindow):
                 #отметка мин на поле
                 if obj.is_pressed == False:
                     if obj.text() == '':
-                        obj.setText("O")
+                        obj.setText("X")
                         obj.setStyleSheet("background-color: yellow")
                         obj.mine_note = True
                         obj.setCheckable(False)
@@ -145,25 +141,12 @@ class GamePole:
                 if self.pole[i][j].mine == True and around_mines > 0:
                     around_mines -= 1
                 self.pole[i][j].around_mines = around_mines
-                
                 around_mines = 0
-
-    def show(self):
-        for i in range(self.N):
-            for j in range(self.N):
-                if self.pole[i][j].fl_open == False:
-                    print('#', end=' ')
-                    #print(self.pole[i][j].mine, self.pole[i][j].around_mines, end=' ')
-                else:
-                    print(self.pole[i][j].around_mines, end=' ')
-            print()
-
-pole_game = GamePole(12, 12)
-pole_game.init()
-#pole_game.pole[0][0].fl_open = True
 
 app = QApplication([])
 window = MainWindow()
+pole_game = GamePole(window.height, window.width)
+pole_game.init()
 window.init()
 window.show()
 app.exec()
