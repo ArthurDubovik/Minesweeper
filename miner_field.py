@@ -1,7 +1,7 @@
 import random
-from PyQt6.QtWidgets import QPushButton, QApplication, QMainWindow, QWidget, QGridLayout
-from PyQt6.QtGui import QPalette, QColor
-from PyQt6.QtCore import QSize, Qt
+from PyQt6.QtWidgets import QPushButton, QApplication, QMainWindow, QWidget, QGridLayout, QToolBar, QLabel, QCheckBox, QStatusBar
+from PyQt6.QtGui import QPalette, QColor, QAction
+from PyQt6.QtCore import QSize, Qt, QCoreApplication
 from PyQt6 import QtCore
 
 class Color(QWidget):
@@ -15,19 +15,58 @@ class Color(QWidget):
          
 class MainWindow(QMainWindow):
     def __init__(self):
+        #список с объктами кнопок
         self.cells = []
+        
+        #количество полей
+        self.height = self.width = 12
+        
         super(MainWindow, self).__init__()
     
-        self.setWindowTitle("My App")
+        self.setWindowTitle("Minisweeper")
         self.layout = QGridLayout()
         self.widget = QWidget()
         self.widget.setLayout(self.layout)
         self.setCentralWidget(self.widget)
         
-        #количество полей
-        self.height = self.width = 16
+        #панель меню
+        toolbar = QToolBar("My main toolbar")
 
-        #заполнение поля кнопками
+        button_action = QAction("New game", self)
+        button_action.triggered.connect(self.ToolBarNewGame)
+        toolbar.addAction(button_action)
+
+        toolbar.addSeparator()
+
+        button_action2 = QAction("Difficult", self)
+        #button_action2.triggered.connect()
+        button_action2.setCheckable(True)
+        toolbar.addAction(button_action2)
+
+        button_action3 = QAction("Field size", self)
+        #button_action3.triggered.connect()
+        button_action3.setCheckable(True)
+        toolbar.addAction(button_action3)
+
+        button_action4 = QAction("Exit", self)
+        button_action4.triggered.connect(QCoreApplication.instance().quit)
+        toolbar.addAction(button_action4)
+
+        menu = self.menuBar()
+
+        file_menu = menu.addMenu("Menu")
+        file_menu.addAction(button_action)
+        file_menu.addSeparator()
+
+        file_submenu = file_menu.addMenu("Difficult")
+        file_submenu.addAction(button_action2)
+        file_submenu = file_menu.addMenu("Field size")
+        file_submenu.addAction(button_action3)
+        
+        file_menu.addSeparator()
+        file_menu.addAction(button_action4)
+        
+    #заполнение поля кнопками
     def init(self):
         for i in range(self.height):
             for j in range(self.width):
@@ -49,7 +88,16 @@ class MainWindow(QMainWindow):
                 self.button.x = i
                 self.button.y = j
                 self.cells.append(self.button)
-   
+
+    #событие NewGame
+    def ToolBarNewGame(self, s):
+        for i in self.cells:
+            i.setText('')
+            i.setStyleSheet("background-color: white")
+        window.init()
+        pole_game.pole = []
+        pole_game.init()      
+        
     #открытие поля по клику
     def open_cell(self):
         sender = self.sender()
@@ -58,14 +106,16 @@ class MainWindow(QMainWindow):
             sender.setDisabled(True)
             sender.is_pressed = True
             
+            #нажатие на мину
             if pole_game.pole[sender.x][sender.y].mine == True:
                 sender.setText('XX')
                 for i in self.cells:
-                    i.click()
+                    i.click() 
                     if i.mine_note == True:
                         i.mine_note = False
                         i.setCheckable(True)
-                        i.setStyleSheet("background-color: white")
+                        i.setText('')
+                    
             elif pole_game.pole[sender.x][sender.y].around_mines > 0:
                     sender.setText(str(pole_game.pole[sender.x][sender.y].around_mines))
             if pole_game.pole[sender.x][sender.y].around_mines == 0 and pole_game.pole[sender.x][sender.y].mine != True:
@@ -86,10 +136,10 @@ class MainWindow(QMainWindow):
     #обработка нажатия правой кнопоки мыши
     def eventFilter(self, obj, event):
         if event.type() == QtCore.QEvent.Type.MouseButtonPress:
-            if event.button() == Qt.MouseButton.LeftButton:
-                print(obj.objectName(), "Left click")
-            elif event.button() == Qt.MouseButton.RightButton:
-                print(obj.objectName(), "Right click")
+            #if event.button() == Qt.MouseButton.LeftButton:
+            #    print(obj.objectName(), "Left click")
+            if event.button() == Qt.MouseButton.RightButton:
+                #print(obj.objectName(), "Right click")
 
                 #отметка мин на поле
                 if obj.is_pressed == False:
@@ -104,8 +154,8 @@ class MainWindow(QMainWindow):
                         obj.mine_note = False
                         obj.setCheckable(True)
 
-            elif event.button() == Qt.MouseButton.MiddleButton:
-                print(obj.objectName(), "Middle click")
+            #elif event.button() == Qt.MouseButton.MiddleButton:
+            #    print(obj.objectName(), "Middle click")
         return QtCore.QObject.event(obj, event)
 
 #описание игровой ячейки
@@ -117,14 +167,15 @@ class Cell:
 
 #описание игрового поля
 class GamePole:
-    def __init__(self, N, M):
-        self.M = M
-        self.N = N
-        self.pole = [[(Cell(0, False)) for i in range(N)] for i in range(N)]
+    def __init__(self):
+        self.M = window.height
+        self.N = window.width
+        #self.pole = [[(Cell(0, False)) for i in range(self.N)] for i in range(self.N)]
     def init(self):
+        self.pole = [[(Cell(0, False)) for i in range(self.N)] for i in range(self.N)]
         rij = []
         l = 0
-        while l < self.M:
+        while l < self.N:
             r = [random.randrange(self.N), random.randrange(self.N)]
             if r not in rij:
                 rij.append(r)
@@ -145,7 +196,7 @@ class GamePole:
 
 app = QApplication([])
 window = MainWindow()
-pole_game = GamePole(window.height, window.width)
+pole_game = GamePole()
 pole_game.init()
 window.init()
 window.show()
