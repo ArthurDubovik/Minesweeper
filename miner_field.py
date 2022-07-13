@@ -12,45 +12,51 @@ class Color(QWidget):
         palette = self.palette()
         palette.setColor(QPalette.ColorRole.Window, QColor(color))
         self.setPalette(palette)
-         
+
 class MainWindow(QMainWindow):
-    def __init__(self):
-        #список с объктами кнопок
-        self.cells = []
-        
-        #количество полей
-        self.height = self.width = 12
-        
+    def __init__(self): 
         super(MainWindow, self).__init__()
     
         self.setWindowTitle("Minisweeper")
-        self.layout = QGridLayout()
-        self.widget = QWidget()
-        self.widget.setLayout(self.layout)
-        self.setCentralWidget(self.widget)
         
-        #панель меню
-        toolbar = QToolBar("My main toolbar")
-
+        #кнопка New game (новая игра)
         button_action = QAction("New game", self)
         button_action.triggered.connect(self.ToolBarNewGame)
-        toolbar.addAction(button_action)
 
-        toolbar.addSeparator()
-
-        button_action2 = QAction("Difficult", self)
+        #кнопки выбора сложности
+        self.button_action2_1 = QAction("Difficult 1", self)
         #button_action2.triggered.connect()
-        button_action2.setCheckable(True)
-        toolbar.addAction(button_action2)
+        self.button_action2_1.setCheckable(True)
+        self.button_action2_1.setChecked(True)
 
-        button_action3 = QAction("Field size", self)
+        self.button_action2_2 = QAction("Difficult 2", self)
+        #button_action2.triggered.connect()
+        self.button_action2_2.setCheckable(True)
+
+        self.button_action2_3 = QAction("Difficult 3", self)
+        #button_action2.triggered.connect()
+        self.button_action2_3.setCheckable(True)
+    
+        #кнопки выбора размера игрового поля
+        self.button_action3_1 = QAction("14 x 14", self)
         #button_action3.triggered.connect()
-        button_action3.setCheckable(True)
-        toolbar.addAction(button_action3)
+        self.button_action3_1.setCheckable(True)
+        self.button_action3_1.setChecked(True)
+        self.button_action3_1.triggered.connect(self.ChangeDiff)
 
+        self.button_action3_2 = QAction("18 x 18", self)
+        #button_action3.triggered.connect()
+        self.button_action3_2.setCheckable(True)
+        self.button_action3_2.triggered.connect(self.ChangeDiff)
+
+        self.button_action3_3 = QAction("22 x 22", self)
+        #button_action3.triggered.connect()
+        self.button_action3_3.setCheckable(True)
+        self.button_action3_3.triggered.connect(self.ChangeDiff)
+       
+        #Кнопка и событие Exit (закрытие приложения)
         button_action4 = QAction("Exit", self)
         button_action4.triggered.connect(QCoreApplication.instance().quit)
-        toolbar.addAction(button_action4)
 
         menu = self.menuBar()
 
@@ -59,44 +65,115 @@ class MainWindow(QMainWindow):
         file_menu.addSeparator()
 
         file_submenu = file_menu.addMenu("Difficult")
-        file_submenu.addAction(button_action2)
+        file_submenu.addAction(self.button_action2_1)
+        file_submenu.addAction(self.button_action2_2)
+        file_submenu.addAction(self.button_action2_3)
         file_submenu = file_menu.addMenu("Field size")
-        file_submenu.addAction(button_action3)
+        file_submenu.addAction(self.button_action3_1)
+        file_submenu.addAction(self.button_action3_2)
+        file_submenu.addAction(self.button_action3_3)
         
         file_menu.addSeparator()
         file_menu.addAction(button_action4)
         
-    #заполнение поля кнопками
-    def init(self):
+    #заполнение игрового поля кнопками
+    def init(self, height=14, width=14):
+        #список с объктами кнопок
+        self.cells = []
+        
+        #количество кнопок
+        self.height = height
+        self.width = width
+
+        #размер кнопок
+        self.button_height = self.button_width = 38
+
+        #отступ между кнопками
+        self.button_indent = 3
+        
+        #расположение элементов в окне
+        self.layout = QGridLayout()
+        self.widget = QWidget()
+        self.widget.setLayout(self.layout)
+        self.setCentralWidget(self.widget)
+        
+        #размера игрового поля под количество кнопок
+        self.setFixedSize(QSize(self.height * self.button_height + (self.height - 1) * self.button_indent , self.width * self.button_width + (self.width - 1) * self.button_indent ))
+        
         for i in range(self.height):
             for j in range(self.width):
-                self.button = QPushButton()
-                #размер полей
-                self.button.setFixedSize(QSize(38, 38))
-                #подгон размера игрового кона под количество полей
-                self.setFixedSize(QSize(self.height * 38 + (self.height - 1) * 6, self.width * 38 + (self.width - 1) * 6))
-                self.button.setStyleSheet("background-color: white")
+                self.button = QPushButton("Button ", self)
+
+                #шрифт кнопок
+                self.button.setStyleSheet("QPushButton"
+                             "{"
+                             "font: bold 18px;"
+                             "}"
+                             )
+                
+                #размер кнопок
+                self.button.setFixedSize(QSize(self.button_height, self.button_width))
+            
                 self.button.setCheckable(True)
                 self.button.setText('')
                 self.button.clicked.connect(self.open_cell)
+                
                 #флаг нажатой кнопки
                 self.button.is_pressed = False
                 #флаг отмеченной мины
                 self.button.mine_note = False
+                
                 self.button.installEventFilter(self)
                 self.layout.addWidget(self.button, i, j)
                 self.button.x = i
                 self.button.y = j
                 self.cells.append(self.button)
-
+        
     #событие NewGame
     def ToolBarNewGame(self, s):
         for i in self.cells:
             i.setText('')
-            i.setStyleSheet("background-color: white")
-        window.init()
+
+        window.init(self.height, self.width)
         pole_game.pole = []
-        pole_game.init()      
+        pole_game.init(self.height, self.width) 
+
+    #событие выбор размера поля
+    def ChangeDiff(self):
+        sender = self.sender()
+        sender.setChecked(True)
+        if sender.text() == "14 x 14":
+            self.height = self.width = 14
+            self.button_action3_2.setChecked(False)
+            self.button_action3_3.setChecked(False)
+            for i in self.cells:
+                i.setText('')
+            
+            window.init(self.height, self.width)
+            pole_game.pole = []
+            pole_game.init(self.height, self.width)
+            
+        if sender.text() == "18 x 18":
+            self.height = self.width = 18
+            self.button_action3_1.setChecked(False)
+            self.button_action3_3.setChecked(False)
+            for i in self.cells:
+                i.setText('')
+
+            window.init(self.height, self.width)
+            pole_game.pole = []
+            pole_game.init(self.height, self.width)
+           
+        if sender.text() == "22 x 22":
+            self.height = self.width = 22
+            self.button_action3_1.setChecked(False)
+            self.button_action3_2.setChecked(False)
+            for i in self.cells:
+                i.setText('')
+
+            window.init(self.height, self.width)
+            pole_game.pole = []
+            pole_game.init(self.height, self.width)
         
     #открытие поля по клику
     def open_cell(self):
@@ -115,7 +192,7 @@ class MainWindow(QMainWindow):
                         i.mine_note = False
                         i.setCheckable(True)
                         i.setText('')
-                    
+
             elif pole_game.pole[sender.x][sender.y].around_mines > 0:
                     sender.setText(str(pole_game.pole[sender.x][sender.y].around_mines))
             if pole_game.pole[sender.x][sender.y].around_mines == 0 and pole_game.pole[sender.x][sender.y].mine != True:
@@ -145,11 +222,11 @@ class MainWindow(QMainWindow):
                 if obj.is_pressed == False:
                     if obj.text() == '':
                         obj.setText("X")
-                        obj.setStyleSheet("background-color: yellow")
+                        #obj.setStyleSheet("background-color: yellow")
                         obj.mine_note = True
                         obj.setCheckable(False)
                     else:
-                        obj.setStyleSheet("background-color: white")
+                        #obj.setStyleSheet("background-color: white")
                         obj.setText('')
                         obj.mine_note = False
                         obj.setCheckable(True)
@@ -167,11 +244,9 @@ class Cell:
 
 #описание игрового поля
 class GamePole:
-    def __init__(self):
+    def init(self, height=14, width=14):
         self.M = window.height
         self.N = window.width
-        #self.pole = [[(Cell(0, False)) for i in range(self.N)] for i in range(self.N)]
-    def init(self):
         self.pole = [[(Cell(0, False)) for i in range(self.N)] for i in range(self.N)]
         rij = []
         l = 0
@@ -197,8 +272,9 @@ class GamePole:
 app = QApplication([])
 window = MainWindow()
 pole_game = GamePole()
-pole_game.init()
 window.init()
+pole_game.init()
+
 window.show()
 app.exec()
         
