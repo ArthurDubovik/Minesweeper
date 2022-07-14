@@ -21,38 +21,41 @@ class MainWindow(QMainWindow):
         
         #кнопка New game (новая игра)
         button_action = QAction("New game", self)
-        button_action.triggered.connect(self.ToolBarNewGame)
+        button_action.triggered.connect(self.NewGame)
 
         #кнопки выбора сложности
-        self.button_action2_1 = QAction("Difficult 1", self)
+        self.button_action2_1 = QAction("10", self)
         #button_action2.triggered.connect()
         self.button_action2_1.setCheckable(True)
         self.button_action2_1.setChecked(True)
+        self.button_action2_1.triggered.connect(self.ChangeDiff)
 
-        self.button_action2_2 = QAction("Difficult 2", self)
+        self.button_action2_2 = QAction("20", self)
         #button_action2.triggered.connect()
         self.button_action2_2.setCheckable(True)
+        self.button_action2_2.triggered.connect(self.ChangeDiff)
 
-        self.button_action2_3 = QAction("Difficult 3", self)
+        self.button_action2_3 = QAction("30", self)
         #button_action2.triggered.connect()
         self.button_action2_3.setCheckable(True)
+        self.button_action2_3.triggered.connect(self.ChangeDiff)
     
         #кнопки выбора размера игрового поля
-        self.button_action3_1 = QAction("14 x 14", self)
+        self.button_action3_1 = QAction("12 x 12", self)
         #button_action3.triggered.connect()
         self.button_action3_1.setCheckable(True)
         self.button_action3_1.setChecked(True)
-        self.button_action3_1.triggered.connect(self.ChangeDiff)
+        self.button_action3_1.triggered.connect(self.ChangeSize)
 
-        self.button_action3_2 = QAction("18 x 18", self)
+        self.button_action3_2 = QAction("16 x 16", self)
         #button_action3.triggered.connect()
         self.button_action3_2.setCheckable(True)
-        self.button_action3_2.triggered.connect(self.ChangeDiff)
+        self.button_action3_2.triggered.connect(self.ChangeSize)
 
-        self.button_action3_3 = QAction("22 x 22", self)
+        self.button_action3_3 = QAction("20 x 20", self)
         #button_action3.triggered.connect()
         self.button_action3_3.setCheckable(True)
-        self.button_action3_3.triggered.connect(self.ChangeDiff)
+        self.button_action3_3.triggered.connect(self.ChangeSize)
        
         #Кнопка и событие Exit (закрытие приложения)
         button_action4 = QAction("Exit", self)
@@ -77,13 +80,16 @@ class MainWindow(QMainWindow):
         file_menu.addAction(button_action4)
         
     #заполнение игрового поля кнопками
-    def init(self, height=14, width=14):
+    def init(self, height=12, width=12, mines=10):
         #список с объктами кнопок
         self.cells = []
         
         #количество кнопок
         self.height = height
         self.width = width
+
+        #количество кнопок с минами
+        self.mines = mines
 
         #размер кнопок
         self.button_height = self.button_width = 38
@@ -130,50 +136,57 @@ class MainWindow(QMainWindow):
                 self.cells.append(self.button)
         
     #событие NewGame
-    def ToolBarNewGame(self, s):
+    def NewGame(self):
         for i in self.cells:
             i.setText('')
 
-        window.init(self.height, self.width)
+        window.init(self.height, self.width, self.mines)
         pole_game.pole = []
-        pole_game.init(self.height, self.width) 
+        pole_game.init(self.height, self.width, self.mines)
 
-    #событие выбор размера поля
+    #событие выбор уровня сложности
     def ChangeDiff(self):
         sender = self.sender()
         sender.setChecked(True)
-        if sender.text() == "14 x 14":
-            self.height = self.width = 14
-            self.button_action3_2.setChecked(False)
-            self.button_action3_3.setChecked(False)
-            for i in self.cells:
-                i.setText('')
+        if sender.text() == "10":
+            self.mines = 10
+            self.button_action2_2.setChecked(False)
+            self.button_action2_3.setChecked(False)
+            self.NewGame()
             
-            window.init(self.height, self.width)
-            pole_game.pole = []
-            pole_game.init(self.height, self.width)
-            
-        if sender.text() == "18 x 18":
-            self.height = self.width = 18
-            self.button_action3_1.setChecked(False)
-            self.button_action3_3.setChecked(False)
-            for i in self.cells:
-                i.setText('')
-
-            window.init(self.height, self.width)
-            pole_game.pole = []
-            pole_game.init(self.height, self.width)
+        if sender.text() == "20":
+            self.mines = 20
+            self.button_action2_1.setChecked(False)
+            self.button_action2_3.setChecked(False)
+            self.NewGame()
            
-        if sender.text() == "22 x 22":
-            self.height = self.width = 22
+        if sender.text() == "30":
+            self.mines = 30
+            self.button_action2_1.setChecked(False)
+            self.button_action2_2.setChecked(False)
+            self.NewGame()
+    
+    #событие выбор размера поля
+    def ChangeSize(self):
+        sender = self.sender()
+        sender.setChecked(True)
+        if sender.text() == "12 x 12":
+            self.height = self.width = 12
+            self.button_action3_2.setChecked(False)
+            self.button_action3_3.setChecked(False)
+            self.NewGame()
+            
+        if sender.text() == "16 x 16":
+            self.height = self.width = 16
+            self.button_action3_1.setChecked(False)
+            self.button_action3_3.setChecked(False)
+            self.NewGame()
+           
+        if sender.text() == "20 x 20":
+            self.height = self.width = 20
             self.button_action3_1.setChecked(False)
             self.button_action3_2.setChecked(False)
-            for i in self.cells:
-                i.setText('')
-
-            window.init(self.height, self.width)
-            pole_game.pole = []
-            pole_game.init(self.height, self.width)
+            self.NewGame()
         
     #открытие поля по клику
     def open_cell(self):
@@ -242,26 +255,39 @@ class Cell:
         self.mine = mine
         self.fl_open = False
 
-#описание игрового поля
+#описание внутреннего игрового поля
 class GamePole:
-    def init(self, height=14, width=14):
-        self.M = window.height
-        self.N = window.width
-        self.pole = [[(Cell(0, False)) for i in range(self.N)] for i in range(self.N)]
+    def init(self, height=12, width=12, mines=10):
+        #число ячеек
+        self.M = height
+        self.N = width
+        #количество мин
+        self.mines = mines
+
+        #заполнение списка ячеек нулями
+        self.pole = [[(Cell(0, False)) for i in range(self.N)] for i in range(self.M)]
+        
+        #список с минами
         rij = []
-        l = 0
-        while l < self.N:
-            r = [random.randrange(self.N), random.randrange(self.N)]
+        
+        #заполение поля минами
+        mine_count = 0
+        while mine_count < self.mines:
+            r = [random.randrange(self.N), random.randrange(self.M)]
             if r not in rij:
                 rij.append(r)
                 self.pole[r[0]][r[1]].mine = True
-                l += 1
-        for i in range(self.N):
+                mine_count += 1
+        print(mine_count)
+        print(len(rij))
+        
+        #подчет количества мин вокруг каждой ячейки
+        for i in range(self.M):
             for j in range(self.N):
                 around_mines = 0
                 for x in range(-1, 2):
                     for y in range(-1, 2):
-                        if (i + x) >= 0 and (j + y) >= 0 and (i + x) < self.N and (j + y) < self.N:
+                        if (i + x) >= 0 and (j + y) >= 0 and (i + x) < self.M and (j + y) < self.N:
                             if self.pole[i + x][j + y].mine == True:
                                 around_mines += 1
                 if self.pole[i][j].mine == True and around_mines > 0:
