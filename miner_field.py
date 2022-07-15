@@ -1,8 +1,9 @@
 import random
-from PyQt6.QtWidgets import QPushButton, QApplication, QMainWindow, QWidget, QGridLayout, QToolBar, QLabel, QCheckBox, QStatusBar
+from PyQt6.QtWidgets import QPushButton, QApplication, QMainWindow, QWidget, QGridLayout
 from PyQt6.QtGui import QPalette, QColor, QAction
-from PyQt6.QtCore import QSize, Qt, QCoreApplication
+from PyQt6.QtCore import QSize, Qt, QCoreApplication, QPoint, QPropertyAnimation
 from PyQt6 import QtCore
+
 
 class Color(QWidget):
 
@@ -24,7 +25,7 @@ class MainWindow(QMainWindow):
         button_action.triggered.connect(self.NewGame)
 
         #кнопки выбора сложности
-        self.button_action2_1 = QAction("10", self)
+        self.button_action2_1 = QAction("2", self)
         #button_action2.triggered.connect()
         self.button_action2_1.setCheckable(True)
         self.button_action2_1.setChecked(True)
@@ -79,9 +80,22 @@ class MainWindow(QMainWindow):
         file_menu.addSeparator()
         file_menu.addAction(button_action4)
         
+        
+
     #заполнение игрового поля кнопками
     def init(self, height=12, width=12, mines=10):
-        #список с объктами кнопок
+        #win button
+        self.btn = QPushButton(self)
+        self.btn.setText('You win!')
+        self.btn.resize(140, 60)
+        self.btn.setStyleSheet("QPushButton"
+                        "{"
+                        "font: bold 18px;"
+                        "}"
+                        )
+        self.btn.hide()
+        
+        #список с объктами игровых кнопок
         self.cells = []
         
         #количество кнопок
@@ -90,6 +104,12 @@ class MainWindow(QMainWindow):
 
         #количество кнопок с минами
         self.mines = mines
+
+        #число кнопок отмеченных флажком
+        self.check_buttons = 0
+        
+        #список координат с клетками верно отмеченных мин
+        self.checked_mines = []
 
         #размер кнопок
         self.button_height = self.button_width = 38
@@ -103,9 +123,12 @@ class MainWindow(QMainWindow):
         self.widget.setLayout(self.layout)
         self.setCentralWidget(self.widget)
         
-        #размера игрового поля под количество кнопок
-        self.setFixedSize(QSize(self.height * self.button_height + (self.height - 1) * self.button_indent , self.width * self.button_width + (self.width - 1) * self.button_indent ))
+        #размер игрового поля под количество кнопок
+        self.width_size = self.height * self.button_height + (self.height - 1) * self.button_indent 
+        self.height_size = self.width * self.button_width + (self.width - 1) * self.button_indent
+        self.setFixedSize(QSize(self.width_size, self.height_size))
         
+        #создание сетки из кнопок
         for i in range(self.height):
             for j in range(self.width):
                 self.button = QPushButton("Button ", self)
@@ -129,14 +152,40 @@ class MainWindow(QMainWindow):
                 #флаг отмеченной мины
                 self.button.mine_note = False
                 
+                #переопределение для правой кнопки мыши
                 self.button.installEventFilter(self)
                 self.layout.addWidget(self.button, i, j)
+                
+                #задание координат кнопкам
                 self.button.x = i
                 self.button.y = j
                 self.cells.append(self.button)
         
+    #Win
+    def win_ui(self):
+        #включаем Win button
+        self.btn.show()
+        #прячем игровые кнопки
+        for i in self.cells:
+            i.hide()   
+        self.btn.move(0, 20)
+        
+        #animation
+        animation = QPropertyAnimation(self.btn, b'pos', self)
+        animation.setKeyValueAt(0, QPoint(0, 20))
+        animation.setKeyValueAt(0.65, QPoint(self.height_size - 140, self.width_size - 60))
+        animation.setKeyValueAt(1, QPoint(int((self.height_size - 140) / 2), int((self.width_size - 60) / 2)))
+        #Продолжительность анимации
+        animation.setDuration(20000)
+        #Запустить анимацию
+        animation.start()
+        
+    
     #событие NewGame
     def NewGame(self):
+        self.btn.hide()
+        self.new = False
+        
         for i in self.cells:
             i.setText('')
 
@@ -148,8 +197,8 @@ class MainWindow(QMainWindow):
     def ChangeDiff(self):
         sender = self.sender()
         sender.setChecked(True)
-        if sender.text() == "10":
-            self.mines = 10
+        if sender.text() == "2":
+            self.mines = 2
             self.button_action2_2.setChecked(False)
             self.button_action2_3.setChecked(False)
             self.NewGame()
@@ -196,6 +245,12 @@ class MainWindow(QMainWindow):
             sender.setDisabled(True)
             sender.is_pressed = True
             
+            #число нажатых кнопок
+            self.press_buttons = len(list(filter(self.Check_true, [i.is_pressed for i in self.cells])))
+            
+            #проверка условий победы
+            self.win_check()
+
             #нажатие на мину
             if pole_game.pole[sender.x][sender.y].mine == True:
                 sender.setText('XX')
@@ -205,12 +260,14 @@ class MainWindow(QMainWindow):
                         i.mine_note = False
                         i.setCheckable(True)
                         i.setText('')
+                        i.click()
 
             elif pole_game.pole[sender.x][sender.y].around_mines > 0:
                     sender.setText(str(pole_game.pole[sender.x][sender.y].around_mines))
             if pole_game.pole[sender.x][sender.y].around_mines == 0 and pole_game.pole[sender.x][sender.y].mine != True:
                 self.rec_open(sender.x, sender.y)
-
+        
+  
     #открытие пустых ячеек вокруг выбранной пустой
     def rec_open(self, x, y):
         for i in self.cells:
@@ -222,31 +279,58 @@ class MainWindow(QMainWindow):
                 i.click()
             if i.x == x and i.y == y - 1:
                 i.click()
-
+    
+    @staticmethod
+    def Check_true(x):
+        if x == True:
+            return x
+    
     #обработка нажатия правой кнопоки мыши
     def eventFilter(self, obj, event):
         if event.type() == QtCore.QEvent.Type.MouseButtonPress:
             #if event.button() == Qt.MouseButton.LeftButton:
-            #    print(obj.objectName(), "Left click")
+                #print(obj.objectName(), "Left click")
+            
             if event.button() == Qt.MouseButton.RightButton:
                 #print(obj.objectName(), "Right click")
-
+                
                 #отметка мин на поле
                 if obj.is_pressed == False:
                     if obj.text() == '':
                         obj.setText("X")
-                        #obj.setStyleSheet("background-color: yellow")
                         obj.mine_note = True
                         obj.setCheckable(False)
+                        if pole_game.pole[obj.x][obj.y].mine == True:
+                            if [obj.x, obj.y] not in self.checked_mines:
+                                self.checked_mines.append([obj.x, obj.y])
+                    
                     else:
-                        #obj.setStyleSheet("background-color: white")
                         obj.setText('')
                         obj.mine_note = False
                         obj.setCheckable(True)
+                        if [obj.x, obj.y] in self.checked_mines:
+                                self.checked_mines.remove([obj.x, obj.y])
 
-            #elif event.button() == Qt.MouseButton.MiddleButton:
-            #    print(obj.objectName(), "Middle click")
+                #число кнопок отмеченных флажком
+                self.check_buttons = len(list(filter(self.Check_true, [i.mine_note for i in self.cells])))
+
+                self.win_check()
+                #elif event.button() == Qt.MouseButton.MiddleButton:
+                    #print(obj.objectName(), "Middle click")
         return QtCore.QObject.event(obj, event)
+
+    #проверка победных условий
+    def win_check(self):
+        if sorted(self.checked_mines) == sorted(pole_game.rij) and self.check_buttons == self.mines:
+            if self.press_buttons == len(self.cells) - self.mines:
+                self.checked_mines = []
+                for i in self.cells:
+                    i.click()
+                    if i.mine_note == True:
+                        i.mine_note = False
+                        i.setCheckable(True)
+                        i.click()
+                self.win_ui()
 
 #описание игровой ячейки
 class Cell:
@@ -268,18 +352,16 @@ class GamePole:
         self.pole = [[(Cell(0, False)) for i in range(self.N)] for i in range(self.M)]
         
         #список с минами
-        rij = []
+        self.rij = []
         
         #заполение поля минами
         mine_count = 0
         while mine_count < self.mines:
             r = [random.randrange(self.N), random.randrange(self.M)]
-            if r not in rij:
-                rij.append(r)
+            if r not in self.rij:
+                self.rij.append(r)
                 self.pole[r[0]][r[1]].mine = True
                 mine_count += 1
-        print(mine_count)
-        print(len(rij))
         
         #подчет количества мин вокруг каждой ячейки
         for i in range(self.M):
