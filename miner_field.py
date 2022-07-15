@@ -1,9 +1,8 @@
 import random
 from PyQt6.QtWidgets import QPushButton, QApplication, QMainWindow, QWidget, QGridLayout
-from PyQt6.QtGui import QPalette, QColor, QAction
+from PyQt6.QtGui import QPalette, QColor, QAction, QImage, QIcon, QPixmap
 from PyQt6.QtCore import QSize, Qt, QCoreApplication, QPoint, QPropertyAnimation
 from PyQt6 import QtCore
-
 
 class Color(QWidget):
 
@@ -17,8 +16,15 @@ class Color(QWidget):
 class MainWindow(QMainWindow):
     def __init__(self): 
         super(MainWindow, self).__init__()
-    
         self.setWindowTitle("Minisweeper")
+        
+        #images
+        self.IMG_BANNER = QIcon("./img/banner_28x28.png")
+        self.IMG_MINE = QIcon("./img/mine_28x28.png")
+        self.IMG_FALSE_MINE = QIcon("./img/false_mine_28x28.png")
+        self.IMG_EXPLODE = QIcon("./img/explode_28x28.png")
+        
+        
         
         #кнопка New game (новая игра)
         button_action = QAction("New game", self)
@@ -179,8 +185,7 @@ class MainWindow(QMainWindow):
         animation.setDuration(20000)
         #Запустить анимацию
         animation.start()
-        
-    
+
     #событие NewGame
     def NewGame(self):
         self.btn.hide()
@@ -240,45 +245,55 @@ class MainWindow(QMainWindow):
     #открытие поля по клику
     def open_cell(self):
         sender = self.sender()
-        if sender.mine_note != True:
+        sender.setChecked(True)
+        if sender.mine_note != True and sender.is_pressed == False:
             #выключаем кнопку после нажалия ЛКМ
-            sender.setDisabled(True)
+            #sender.setDisabled(True)
             sender.is_pressed = True
+            #sender.setChecked(True)
             
             #число нажатых кнопок
             self.press_buttons = len(list(filter(self.Check_true, [i.is_pressed for i in self.cells])))
             
-            #проверка условий победы
+            #проверка условий победы (если открывается последняя закрытая клетка)
             self.win_check()
-
-            #нажатие на мину
+            
             if pole_game.pole[sender.x][sender.y].mine == True:
-                sender.setText('XX')
-                for i in self.cells:
-                    i.click() 
-                    if i.mine_note == True:
-                        i.mine_note = False
-                        i.setCheckable(True)
-                        i.setText('')
-                        i.click()
-
+                self.Mine_press(sender)
             elif pole_game.pole[sender.x][sender.y].around_mines > 0:
                     sender.setText(str(pole_game.pole[sender.x][sender.y].around_mines))
             if pole_game.pole[sender.x][sender.y].around_mines == 0 and pole_game.pole[sender.x][sender.y].mine != True:
                 self.rec_open(sender.x, sender.y)
         
-  
+    #нажатие на мину
+    def Mine_press(self, sender):
+        for i in self.cells:
+            if [i.x, i.y] in pole_game.rij and i.mine_note == False:
+                i.setCheckable(True)
+                i.setChecked(True)
+                i.setIcon(QIcon(self.IMG_MINE))
+                i.setIconSize(QSize(28,28))
+            if i.isChecked() == False:
+                i.setCheckable(False)
+            if i.mine_note == True and [i.x, i.y] not in pole_game.rij:
+                i.setIcon(QIcon(self.IMG_FALSE_MINE))
+                i.setIconSize(QSize(28,28))
+            i.is_pressed = True
+        sender.setIcon(QIcon(self.IMG_EXPLODE))
+        sender.setIconSize(QSize(28,28))
+
     #открытие пустых ячеек вокруг выбранной пустой
     def rec_open(self, x, y):
         for i in self.cells:
-            if i.x == x and i.y == y + 1:
-                i.click()
-            if i.x == x + 1 and i.y == y:
-                i.click()
-            if i.x == x - 1 and i.y == y:
-                i.click()
-            if i.x == x and i.y == y - 1:
-                i.click()
+            if i.is_pressed == False:
+                if i.x == x and i.y == y + 1:
+                    i.click()
+                if i.x == x + 1 and i.y == y:
+                    i.click()
+                if i.x == x - 1 and i.y == y:
+                    i.click()
+                if i.x == x and i.y == y - 1:
+                    i.click()
     
     @staticmethod
     def Check_true(x):
@@ -290,14 +305,18 @@ class MainWindow(QMainWindow):
         if event.type() == QtCore.QEvent.Type.MouseButtonPress:
             #if event.button() == Qt.MouseButton.LeftButton:
                 #print(obj.objectName(), "Left click")
+
             
             if event.button() == Qt.MouseButton.RightButton:
                 #print(obj.objectName(), "Right click")
                 
                 #отметка мин на поле
                 if obj.is_pressed == False:
-                    if obj.text() == '':
-                        obj.setText("X")
+                    if obj.mine_note == False:
+                        #obj.setText("X")
+                        obj.setIcon(QIcon(self.IMG_BANNER))
+                        obj.setIconSize(QSize(28,28))
+                        
                         obj.mine_note = True
                         obj.setCheckable(False)
                         if pole_game.pole[obj.x][obj.y].mine == True:
@@ -307,6 +326,7 @@ class MainWindow(QMainWindow):
                     else:
                         obj.setText('')
                         obj.mine_note = False
+                        obj.setIcon(QIcon())
                         obj.setCheckable(True)
                         if [obj.x, obj.y] in self.checked_mines:
                                 self.checked_mines.remove([obj.x, obj.y])
