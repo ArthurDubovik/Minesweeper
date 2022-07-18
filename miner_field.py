@@ -8,7 +8,7 @@ from PyQt6 import QtCore
 class MainWindow(QMainWindow):
     def __init__(self): 
         super(MainWindow, self).__init__()
-        self.setWindowTitle("Minisweeper")
+        self.setWindowTitle("Minesweeper by Arthur Dubovik")
         self.setWindowIcon(QIcon("./img/mine.png"))
 
         #Sounds
@@ -103,7 +103,7 @@ class MainWindow(QMainWindow):
         #Button size
         self.BUTTON_HEIGHT = self.BUTTON_WIDTH = 38
         #Padding between buttons
-        self.BUTTON_INDENT = 3
+        self.BUTTON_INDENT = 1
         
         #Arrangement of elements in the window
         self.layout = QGridLayout()
@@ -114,8 +114,8 @@ class MainWindow(QMainWindow):
         #Fixed size of the playing field for the number of buttons
         self.WIDTH_SIZE = self.HEIGHT * self.BUTTON_HEIGHT + (self.HEIGHT - 1) * self.BUTTON_INDENT 
         self.HEIGHT_SIZE = self.WIDTH * self.BUTTON_WIDTH + (self.WIDTH - 1) * self.BUTTON_INDENT
-        self.setFixedSize(QSize(self.WIDTH_SIZE, self.HEIGHT_SIZE))
-        
+        self.setFixedSize(QSize(self.WIDTH_SIZE+30, self.HEIGHT_SIZE+40))
+
         #Creating a grid of buttons
         for i in range(self.HEIGHT):
             for j in range(self.WIDTH):
