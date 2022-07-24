@@ -287,6 +287,14 @@ class MainWindow(QMainWindow):
                     i.click()
                 if i.x == x and i.y == y - 1:
                     i.click()
+                if i.x == x + 1 and i.y == y + 1:
+                    i.click()
+                if i.x == x - 1 and i.y == y - 1:
+                    i.click()
+                if i.x == x - 1 and i.y == y + 1:
+                    i.click()
+                if i.x == x + 1 and i.y == y - 1:
+                    i.click()
     
     @staticmethod
     def check_true(x):
