@@ -3,6 +3,7 @@ from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.button import Button
+from kivy.uix.togglebutton import ToggleButton
 from kivy.metrics import dp
 from kivy.uix.boxlayout import BoxLayout
 from kivy.core.audio import SoundLoader
@@ -26,21 +27,25 @@ class LongpressButton(Factory.Button):
     def on_release(self, *largs):
         pass
 
-class SoundButton(Button):
+class SoundButtonSettings(ToggleButton):
     def on_state(self, instance, value):
-        if value == 'normal':
+        if instance.state == 'normal':
             GameScreen.sound_click.play()
 
+class SoundButtonMenu(Button):
+    def on_state(self, instance, value):
+        if instance.state == 'down':
+            GameScreen.sound_click.play()
 
 class MenuScreen(Screen):
     def __init__(self, **kw):
         super(MenuScreen, self).__init__(**kw)
         box = BoxLayout(orientation='vertical', size=(Window.width, Window.height), padding=[0,450], spacing=30) 
-        new_game = SoundButton(text='New game', font_size = 70, on_release=lambda x: set_screen('game_field'), size_hint=(.9, .01), pos_hint = {'center_x': 0.5}, background_color = '#005454' )
+        new_game = SoundButtonMenu(text='New game', font_size = 70, on_press=lambda x: set_screen('game_field'), size_hint=(.9, .01), pos_hint = {'center_x': 0.5}, background_color = '#005454' )
         box.add_widget(new_game)
-        settings = SoundButton(text='Settings', font_size = 70, on_release=lambda x: set_screen('settings'), size_hint=(.9, .01), pos_hint = {'center_x': 0.5}, background_color = '#005454' )
+        settings = SoundButtonMenu(text='Settings', font_size = 70, on_press=lambda x: set_screen('settings'), size_hint=(.9, .01), pos_hint = {'center_x': 0.5}, background_color = '#005454' )
         box.add_widget(settings)
-        exit = SoundButton(text='Exit', font_size = 70, on_release=lambda x: MineSweeperApp().stop(), size_hint=(.9, .01), pos_hint = {'center_x': 0.5}, background_color = '#005454')
+        exit = SoundButtonMenu(text='Exit', font_size = 70, on_press=lambda x: MineSweeperApp().stop(), size_hint=(.9, .01), pos_hint = {'center_x': 0.5}, background_color = '#005454')
         box.add_widget(exit)
         self.add_widget(box)
 
@@ -49,15 +54,15 @@ class SettingsScreen(Screen):
         super(SettingsScreen, self).__init__(**kw)
 
         box = BoxLayout(orientation='vertical', size=(Window.width, Window.height), padding=[0,400], spacing=40) 
-        self.level_1 = SoundButton(text='5 x 11, 5 mines', on_release=self.change_diff_1, font_size = 70, size_hint=(.9, .05), pos_hint = {'center_x': 0.5}, background_color = '#005454' )
+        self.level_1 = SoundButtonSettings(text='5 x 11, 5 mines', on_press=self.change_diff_1, font_size = 70, size_hint=(.9, .05), pos_hint = {'center_x': 0.5}, background_color = '#005454' )
         box.add_widget(self.level_1)
-        self.level_2 = SoundButton(text='6 x 13, 10 mines', on_release=self.change_diff_2, state = 'down', font_size = 70, size_hint=(.9, .05), pos_hint = {'center_x': 0.5}, background_color = '#005454' )
+        self.level_2 = SoundButtonSettings(text='6 x 13, 10 mines', on_press=self.change_diff_2, state = 'down', font_size = 70, size_hint=(.9, .05), pos_hint = {'center_x': 0.5}, background_color = '#005454' )
         box.add_widget(self.level_2)
-        self.level_3 = SoundButton(text='8 x 17, 15 mines', on_release=self.change_diff_3, font_size = 70, size_hint=(.9, .05), pos_hint = {'center_x': 0.5}, background_color = '#005454')
+        self.level_3 = SoundButtonSettings(text='8 x 17, 15 mines', on_press=self.change_diff_3, font_size = 70, size_hint=(.9, .05), pos_hint = {'center_x': 0.5}, background_color = '#005454')
         box.add_widget(self.level_3)
-        box.add_widget(SoundButton(text='Back', on_press=lambda x: set_screen('menu'), font_size = 70, size_hint=(.9, .05), pos_hint = {'center_x': 0.5}, background_color = '#005454'))
+        box.add_widget(SoundButtonMenu(text='Back', on_press=lambda x: set_screen('menu'), font_size = 70, size_hint=(.9, .05), pos_hint = {'center_x': 0.5}, background_color = '#005454'))
         self.add_widget(box)
-
+    
     def change_diff_1(self, sender, height=11, width=5, mines=5):
         self.level_1.state = 'down'
         self.level_2.state = 'normal'
@@ -141,6 +146,7 @@ class GameScreen(Screen):
                 self.button.bind(on_release=self.open_cell)
                 self.button.bind(on_long_press=self.mine_check)
                 self.button.bind(on_press=self.flag)
+                self.button.background_color = '#005454'
                 self.button.win = False
                 self.button.coord_x = i
                 self.button.coord_y = j
@@ -195,19 +201,19 @@ class GameScreen(Screen):
                     #Number custom colors
                     if sender.text == '1':
                         sender.font_size = 70
-                        sender.background_color = 0.1, 0.5, 0.6, 1
+                        sender.background_color = '#20B2AA'
                     if sender.text == '2':
                         sender.font_size = 70
-                        sender.background_color = 255, 0.5, 0.6, 1
+                        sender.background_color = '#ff0000' #255, 0.5, 0.6, 1
                     if sender.text == '3':
                         sender.font_size = 70
-                        sender.background_color = 0.1, 0.5, 0.6, 1
+                        sender.background_color = '#DA70D6'   
                     if sender.text == '4':
                         sender.font_size = 70
-                        sender.background_color = 0.1, 0.5, 0.6, 1
+                        sender.background_color = '#DAA520'
                     if sender.text == '5':
                         sender.font_size = 70
-                        sender.background_color = 0.1, 0.5, 0.6, 1
+                        sender.background_color = '#00FF00'
 
             #If you clicked on an empty cell
             if pole_game.pole[sender.coord_x][sender.coord_y].around_mines == 0 and pole_game.pole[sender.coord_x][sender.coord_y].mine != True:
@@ -224,6 +230,7 @@ class GameScreen(Screen):
         
         if sender.is_pressed == False and sender.win == False:
             if sender.mine_note == False:
+                sender.background_color = 180, 40, 100, 0.8
                 sender.background_normal = self.img_banner
                 sender.background_down = self.img_banner
                 
@@ -242,7 +249,7 @@ class GameScreen(Screen):
                 sender.long = True
                 if sender not in self.non_check_mines:
                     self.non_check_mines.append(sender)
-                
+                sender.background_color = '#005454'
                 sender.background_normal = 'atlas://data/images/defaulttheme/button'
                 sender.background_down = 'atlas://data/images/defaulttheme/button_pressed'
                 if [sender.coord_x, sender.coord_y] in self.CHECKED_MINES:
@@ -257,6 +264,7 @@ class GameScreen(Screen):
             i.is_pressed = True
             if [i.coord_x, i.coord_y] in pole_game.rij and i.mine_note == False:
                 i.state = 'normal'
+                i.background_color = 180, 40, 100, 0.8
                 i.background_normal = self.img_mine
             if i.mine_note == True and [i.coord_x, i.coord_y] not in pole_game.rij:
                 i.background_normal = self.img_false_mine
