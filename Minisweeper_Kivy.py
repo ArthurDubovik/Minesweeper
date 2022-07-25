@@ -8,12 +8,12 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.core.audio import SoundLoader
 from kivy.clock import Clock
 from kivy.factory import Factory
-from kivy.uix.recycleview import RecycleView
 from kivy.core.window import Window
+
 
 class LongpressButton(Factory.Button):
     __events__ = ('on_long_press', )
-    long_press_time = Factory.NumericProperty(0.2)
+    long_press_time = Factory.NumericProperty(0.3)
     def on_state(self, instance, value):
         if value == 'down':
             lpt = self.long_press_time
@@ -32,9 +32,9 @@ class MenuScreen(Screen):
     def __init__(self, **kw):
         super(MenuScreen, self).__init__(**kw)
         
-        box = BoxLayout(orientation='vertical')
-        box.add_widget(Button(text='New game', on_release=lambda x: set_screen('game_field')))
-        box.add_widget(Button(text='Exit', on_release=lambda x: MineSweeperApp().stop()))
+        box = BoxLayout(orientation='vertical', size=(Window.width, Window.height), padding=[0,400], spacing=40) 
+        box.add_widget(Button(text='New game', font_size = 70, on_release=lambda x: set_screen('game_field'), size_hint=(.9, .05), pos_hint = {'center_x': 0.5, 'center_y': 0.6} ))
+        box.add_widget(Button(text='Exit', font_size = 70, on_release=lambda x: MineSweeperApp().stop(), size_hint=(.9, .05), pos_hint = {'center_x': 0.5, 'center_y': 0.4}))
         self.add_widget(box)
 
 
@@ -71,30 +71,33 @@ class GameScreen(Screen):
         self.CHECKED_MINES = []
         self.MINES = 6
 
-        #список с клетками с которых сняли флажок
+        #List with cells that have been unchecked
         self.non_check_mines = []
 
         self.open_cells = []
 
+        #Button sizes
+        but_size_x = 60
+        but_size_y = 60
+
+        #field_x = (but_size_x) * 6 + (pad_x) * 5
+        #field_y = (but_size_y + (pad_y)*2) * 13
         
-        self.layout = GridLayout(cols=6, rows=13)
-        self.layout.col_default_width = self.layout.row_default_height = 40
-
-        root = RecycleView(size_hint=(1, None), size=(Window.width, Window.height))
-        root.add_widget(self.layout)
-        self.add_widget(root)
-
+        #Setting the padding
+        space = 10
+        pad_x = Window.width - (but_size_x * self.WIDTH + space * (self.WIDTH - 1))
+        pad_y = Window.height - (but_size_y * self.HEIGHT + space * (self.HEIGHT - 1))
+        
+        self.layout = GridLayout(cols=6, rows=13, padding=[pad_x/2, pad_y/2], spacing=[space])
+        
         for i in range(self.HEIGHT):
             for j in range(self.WIDTH):
-
-                self.button = LongpressButton(height=38, width=38, font_size=30)
-                #self.button.background_color = 23,67,88,0.5
+                #size_hint_min = [but_size_x,but_size_y], size_hint_max = [but_size_x,but_size_y]
+                self.button = LongpressButton()
                 self.button.bind(on_release=self.open_cell)
                 self.button.bind(on_long_press=self.mine_check)
                 self.button.bind(on_press=self.flag)
                 self.button.win = False
-                #self.button.size = 40, 40
-                #self.button.border = 0, 0, 0, 0
                 self.button.coord_x = i
                 self.button.coord_y = j
                 self.button.long = False
@@ -102,10 +105,13 @@ class GameScreen(Screen):
                 self.button.mine_note = False
                 self.CELLS.append(self.button)
                 self.layout.add_widget(self.button)
-        return self.layout
 
-    def on_leave(self):  
-        self.layout.clear_widgets() 
+        root = BoxLayout(size=(Window.width, Window.height))
+        root.add_widget(self.layout)
+        self.add_widget(root)
+
+    def on_leave(self): 
+        self.layout.clear_widgets()
 
     #Victory
     def victory(self):
@@ -216,6 +222,7 @@ class GameScreen(Screen):
         #sender.background_color = 180, 40, 100, 0
         sender.background_normal = "./img/explode_mine_2.png"
         
+
     #Opening empty cells around the selected empty one
     def rec_open(self, x, y):
         for i in self.CELLS:
@@ -268,6 +275,7 @@ class GameField:
         mine_count = 0
         while mine_count < self.mines:
             r = [random.randrange(self.M), random.randrange(self.N)]
+            #print(r)
             if r not in self.rij:
                 self.rij.append(r)
                 self.pole[r[0]][r[1]].mine = True
@@ -287,6 +295,7 @@ class GameField:
                 self.pole[i][j].around_mines = around_mines
                 around_mines = 0
 
+
 def set_screen(name_screen):
     sm.current = name_screen
 
@@ -301,7 +310,6 @@ class MineSweeperApp(App):
     def build(self):
         return sm
 
-if __name__ == '__main__':
-    pole_game = GameField()
-    pole_game.init()
-    MineSweeperApp().run()
+pole_game = GameField()
+pole_game.init()
+MineSweeperApp().run()
