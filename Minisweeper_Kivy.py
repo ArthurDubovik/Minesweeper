@@ -40,27 +40,26 @@ class SoundButtonMenu(Button):
 class MenuScreen(Screen):
     def __init__(self, **kw):
         super(MenuScreen, self).__init__(**kw)
-        box = BoxLayout(orientation='vertical', size=(Window.width, Window.height), padding=[0,450], spacing=30) 
-        new_game = SoundButtonMenu(text='New game', font_size = 70, on_press=lambda x: set_screen('game_field'), size_hint=(.9, .01), pos_hint = {'center_x': 0.5}, background_color = '#005454' )
+        box = BoxLayout(orientation='vertical', size=(Window.width, Window.height/3), spacing=30, pos_hint = {'center_x': 0.5, 'center_y': 0.5}, size_hint = (None, None)) 
+        new_game = SoundButtonMenu(text='New game', font_size = Window.width/15, on_press=lambda x: set_screen('game_field'), size_hint=(.9, .1), pos_hint = {'center_x': 0.5, 'center_y': 0.75}, background_color = '#005454' )
         box.add_widget(new_game)
-        settings = SoundButtonMenu(text='Settings', font_size = 70, on_press=lambda x: set_screen('settings'), size_hint=(.9, .01), pos_hint = {'center_x': 0.5}, background_color = '#005454' )
+        settings = SoundButtonMenu(text='Settings', font_size = Window.width/15, on_press=lambda x: set_screen('settings'), size_hint=(.9, .1), pos_hint = {'center_x': 0.5, 'center_y': 0.5}, background_color = '#005454' )
         box.add_widget(settings)
-        exit = SoundButtonMenu(text='Exit', font_size = 70, on_press=lambda x: MineSweeperApp().stop(), size_hint=(.9, .01), pos_hint = {'center_x': 0.5}, background_color = '#005454')
+        exit = SoundButtonMenu(text='Exit', font_size = Window.width/15, on_press=lambda x: MineSweeperApp().stop(), size_hint=(.9, .1), pos_hint = {'center_x': 0.5, 'center_y': 0.25}, background_color = '#005454')
         box.add_widget(exit)
         self.add_widget(box)
 
 class SettingsScreen(Screen):
     def __init__(self, **kw):
         super(SettingsScreen, self).__init__(**kw)
-
-        box = BoxLayout(orientation='vertical', size=(Window.width, Window.height), padding=[0,400], spacing=40) 
-        self.level_1 = SoundButtonSettings(text='5 x 11, 5 mines', on_press=self.change_diff_1, font_size = 70, size_hint=(.9, .05), pos_hint = {'center_x': 0.5}, background_color = '#005454' )
+        box = BoxLayout(orientation='vertical', size=(Window.width, Window.height/2.3), spacing=40, pos_hint = {'center_x': 0.5, 'center_y': 0.5}, size_hint = (None, None)) 
+        self.level_1 = SoundButtonSettings(text='5 x 11, 5 mines', on_press=self.change_diff_1, font_size = Window.width/15, size_hint=(.9, .1), pos_hint = {'center_x': 0.5}, background_color = '#005454' )
         box.add_widget(self.level_1)
-        self.level_2 = SoundButtonSettings(text='6 x 13, 10 mines', on_press=self.change_diff_2, state = 'down', font_size = 70, size_hint=(.9, .05), pos_hint = {'center_x': 0.5}, background_color = '#005454' )
+        self.level_2 = SoundButtonSettings(text='6 x 13, 10 mines', on_press=self.change_diff_2, state = 'down', font_size = Window.width/15, size_hint=(.9, .1), pos_hint = {'center_x': 0.5}, background_color = '#005454' )
         box.add_widget(self.level_2)
-        self.level_3 = SoundButtonSettings(text='8 x 17, 15 mines', on_press=self.change_diff_3, font_size = 70, size_hint=(.9, .05), pos_hint = {'center_x': 0.5}, background_color = '#005454')
+        self.level_3 = SoundButtonSettings(text='8 x 17, 15 mines', on_press=self.change_diff_3, font_size = Window.width/15, size_hint=(.9, .1), pos_hint = {'center_x': 0.5}, background_color = '#005454')
         box.add_widget(self.level_3)
-        box.add_widget(SoundButtonMenu(text='Back', on_press=lambda x: set_screen('menu'), font_size = 70, size_hint=(.9, .05), pos_hint = {'center_x': 0.5}, background_color = '#005454'))
+        box.add_widget(SoundButtonMenu(text='Back', on_press=lambda x: set_screen('menu'), font_size = Window.width/15, size_hint=(.9, .05), pos_hint = {'center_x': 0.5}, background_color = '#005454'))
         self.add_widget(box)
     
     def change_diff_1(self, sender, height=11, width=5, mines=5):
@@ -104,8 +103,6 @@ class GameScreen(Screen):
         pole_game.pole = []
         pole_game.init(pole_game.HEIGHT, pole_game.WIDTH, pole_game.MINES)
         
-        
-
         #Button icons
         self.img_banner = './img/banner_2.png'
         self.img_mine = './img/mine_2.png'
@@ -115,26 +112,23 @@ class GameScreen(Screen):
         self.CELLS = []
         self.HEIGHT = pole_game.HEIGHT
         self.WIDTH = pole_game.WIDTH
+        
         #List of coordinates with cells of correctly marked mines
         self.CHECKED_MINES = []
         self.MINES = pole_game.MINES
-
 
         #List with cells that have been unchecked
         self.non_check_mines = []
 
         self.open_cells = []
 
-        #Button sizes
-        if self.WIDTH < 6:
-            but_size_x = but_size_y = 180
-        if self.WIDTH == 6:
-            but_size_x = but_size_y = 160
-        if self.WIDTH > 6:
-            but_size_x = but_size_y = 120
+        #Button sizes      
+        space = 10
+        win_x = int((Window.width  - space * (self.WIDTH + 1)) / self.WIDTH)
+        win_y = int((Window.height - space * (self.HEIGHT + 1)) / self.HEIGHT)
+        but_size_x = but_size_y = min(win_x, win_y)
         
         #Setting the padding
-        space = 10
         pad_x = Window.width - (but_size_x * self.WIDTH + space * (self.WIDTH - 1))
         pad_y = Window.height - (but_size_y * self.HEIGHT + space * (self.HEIGHT - 1))
         
@@ -148,6 +142,7 @@ class GameScreen(Screen):
                 self.button.bind(on_press=self.flag)
                 self.button.background_color = '#005454'
                 self.button.win = False
+                self.button.font_size = Window.width/15
                 self.button.coord_x = i
                 self.button.coord_y = j
                 self.button.long = False
@@ -200,19 +195,14 @@ class GameScreen(Screen):
                     
                     #Number custom colors
                     if sender.text == '1':
-                        sender.font_size = 70
                         sender.background_color = '#20B2AA'
                     if sender.text == '2':
-                        sender.font_size = 70
                         sender.background_color = '#ff0000' #255, 0.5, 0.6, 1
                     if sender.text == '3':
-                        sender.font_size = 70
                         sender.background_color = '#DA70D6'   
                     if sender.text == '4':
-                        sender.font_size = 70
                         sender.background_color = '#DAA520'
                     if sender.text == '5':
-                        sender.font_size = 70
                         sender.background_color = '#00FF00'
 
             #If you clicked on an empty cell
